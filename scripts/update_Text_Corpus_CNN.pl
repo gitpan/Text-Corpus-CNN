@@ -5,15 +5,15 @@
 
 =head1 NAME
 
-update_Corpus_CNN.pl - Script to update CNN news article corpus.
+update_Text_Corpus_CNN.pl - Script to update CNN news article corpus.
 
 =head1 SYNOPSIS
 
-  update_Corpus_CNN.pl [-d corpusDirectory -c -t -h]
+  update_Text_Corpus_CNN.pl [-d corpusDirectory -c -t -h]
 
 =head1 DESCRIPTION
 
-The script C<update_Corpus_CNN.pl> may be used to create or update a temporary corpus of CNN news articles
+The script C<update_Text_Corpus_CNN.pl> may be used to create or update a temporary corpus of CNN news articles
 for personal research and testing of information processing techniques. Read the
 CNN Interactive Service Agreement to ensure you abide by it when using this script.
 
@@ -84,11 +84,13 @@ use Cwd qw(getcwd abs_path);
 use Pod::Usage;
 use Data::Dump qw(dump);
 
-my $corpusDirectory;
+my $el = "\n";
+my $corpusDirectory = "$ENV{HOME}/projects/corpora/cnn";
 my $doParsingTest = 0;
 my $helpMessage = 0;
-my $verbose = 0;
-my $result = GetOptions ("d:s" => \$corpusDirectory, "t" => \$doParsingTest, "h|help" => \$helpMessage, "v|verbose" => \$verbose);
+my $verbose = 1;
+my $logCacheHitsMisses = 0;
+my $result = GetOptions ("d:s" => \$corpusDirectory, "t" => \$doParsingTest, "h|help" => \$helpMessage, "v|verbose" => \$verbose, "c" => \$logCacheHitsMisses);
 
 # print info message
 if ($helpMessage)
@@ -123,7 +125,7 @@ my $processInfo = Proc::Pidfile->new (pidfile => $pid, silent => 1);
 
 # update the new list of files.
 my $corpus = Text::Corpus::CNN->new(corpusDirectory => $corpusDirectory);
-$corpus->update(verbose => $verbose);
+$corpus->update(verbose => $verbose, logCacheHitsMisses => $logCacheHitsMisses);
 
 # test parsing of each article.
 if ($doParsingTest)

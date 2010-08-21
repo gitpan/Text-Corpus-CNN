@@ -21,7 +21,7 @@ my $corpus = Text::Corpus::CNN->new (corpusDirectory => $corpusDirectory);
 isa_ok ($corpus, 'Text::Corpus::CNN');
 
 # prompt for request to run tests that require network acccess.
-if (defined (%ENV) && exists ($ENV{TEXT_CORPUS_CNN_FULL_TESTING}) && $ENV{TEXT_CORPUS_CNN_FULL_TESTING})
+if (%ENV && exists ($ENV{TEXT_CORPUS_CNN_FULL_TESTING}) && $ENV{TEXT_CORPUS_CNN_FULL_TESTING})
 {
     diag ("\nTesting with network access.\n");
 

@@ -8,7 +8,7 @@ use Date::Manip;
 BEGIN {
   use Exporter ();
   use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-  $VERSION = '1.00';
+  $VERSION     = '1.02';
   @ISA     = qw();
   @EXPORT      = qw();
   @EXPORT_OK   = qw();
@@ -65,7 +65,8 @@ class with the following parameters:
 
   htmlContent => '...'
 
-C<htmlContent> must be a string containing the HTML of the document to be parsed.
+C<htmlContent> must be a string containing the HTML of the document to be parsed. The
+string should already be encoded as a Perl internal string.
 
 =item C<uri>
 
@@ -73,6 +74,13 @@ C<htmlContent> must be a string containing the HTML of the document to be parsed
 
 C<uri> must be a string containing the URL of the document provided by C<htmlContent>; it is
 also returned as the document's unique identifier with C<getUri>.
+
+=item C<encoding>
+
+  encoding => '...'
+
+C<encoding> is the encoding that the HTML content of the document uses. It is
+returned by C<getEncoding>.
 
 =back
 
@@ -86,6 +94,7 @@ sub new
 	
   $Self->{htmlParser} = HTML::TreeBuilder::XPath->new;
   $Self->{htmlContent} = $Parameters{htmlContent};
+  $Self->{encoding} = $Parameters{encoding};
 
   # assuming here that the paser will convert the text from the pages encoding
   # to Perl's internal string representation.
@@ -356,6 +365,23 @@ sub getDescription
   return $Self->{description};
 }
 
+
+=head2 C<getEncoding>
+
+  getEncoding ()
+
+C<getEncoding> returns the original encoding used by the HTML of the document.
+
+=cut
+
+sub getEncoding
+{
+  my $Self = shift;
+  return $Self->{encoding} if exists $Self->{encoding};
+  return undef;
+}
+
+
 =head2 C<getHighlights>
 
   getHighlights ()
@@ -371,21 +397,37 @@ sub getHighlights
 
   # get the categories.
   my @possibleHighlights = $Self->{htmlParser}->findvalues('/html/body/div/div/div/div/div/div/div/ul[@class="cnn_bulletbin cnnStryHghLght"]/li');
-  if (@possibleHighlights == 0)
-  {
-    @possibleHighlights = $Self->{htmlParser}->findvalues('/html/body/div/div/div/div/ul/li');
-  }
+  @possibleHighlights = $Self->{htmlParser}->findvalues('/html/body/div/div/div/div[@id="cnnHeaderRightCol"]/ul/li') if (@possibleHighlights == 0);
+  @possibleHighlights = $Self->{htmlParser}->findvalues('/html/body/div/div/div/div/div[@id="cnnHeaderRightCol"]/ul/li') if (@possibleHighlights == 0);
+
   my @highlights= ();
   foreach my $highlight (@possibleHighlights)
   {
     next if ($highlight eq 'Story Highlights');
-    next if ($highlight =~ m/^Next Article in/i);
+    last if ($highlight =~ m/^Next Article/i);
     push @highlights, $highlight;
   }
   $Self->_trim (\@highlights);
   $Self->{highlights} = \@highlights;
   return $Self->{highlights};
 }
+
+
+=head2 C<getHtml>
+
+  getHtml ()
+
+C<getHtml> returns the HTML of the document as a string.
+
+=cut
+
+sub getHtml
+{
+  my $Self = shift;
+  return $Self->{htmlContent} if exists $Self->{htmlContent};
+  return undef;
+}
+
 
 =head2 C<getTitle>
 
@@ -459,6 +501,15 @@ sub DESTROY
 =head1 INSTALLATION
 
 For installation instructions see L<Text::Corpus::CNN>.
+
+=head1 BUGS
+
+This module uses xpath expressions to extract links and text which may become invalid
+as the format of various pages change, causing a lot of bugs.
+
+Please email bugs reports or feature requests to C<text-corpus-cnn@rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Text-Corpus-CNN>.  The author
+will be notified and you can be automatically notified of progress on the bug fix or feature request.
 
 =head1 AUTHOR
 
